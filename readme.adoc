@@ -1,0 +1,74 @@
+# Pull images from secured registry
+
+## Trust private CA in the whole cluster
+
+We need to trust the certificate from our registry. The root CA - in this case our router's CA - must be added as a ConfigMap and added in _image.config.openshift.io/cluster_ to _additionalTrustedCA_ in the _openshift-config_ namespace. It takes a few minutes for the trusted certificate to be distributed within the cluster.
+
+https://docs.openshift.com/container-platform/4.6/openshift_images/image-configuration.html#images-configuration-cas_image-configuration
+
+```
+ROUTERCA=$(oc extract -n openshift-ingress-operator secret/router-ca --keys=tls.crt --to=-)
+echo $ROUTERCA
+
+REGISTRY_HOSTNAME=$(oc get route nexus-container-registry -n nexus -o 'jsonpath={.status.ingress[0].host}')
+oc create configmap router-ca -n openshift-config --from-literal=$REGISTRY_HOSTNAME=$ROUTERCA
+oc get cm router-ca -n openshift-config -oyaml
+// oc explain --api-version='config.openshift.io/v1' Image --recursive
+oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"router-ca"}}}' --type=merge
+
+# Needs a couple minutes
+# oc import-image importedfuse7hello --from='nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/test/fuse7hello:latest' --confirm
+```
+
+## Add credentials for service account
+
+Create a Secret with the registry credentials and link it to the ServiceAccount. The secrets that are linked to the ServiceAccount of the Pod (default) for _pull_ will be automatically added to the Pod's _imagePullSecrets_ list.
+
+```
+$ oc create secret docker-registry nexus-container-registry-nexus \
+    --docker-server=nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com \
+    --docker-username=admin \
+    --docker-password=admin123
+$ oc extract secret/nexus-container-registry-nexus --keys .dockerconfigjson --to=- | jq .
+
+$ oc secrets link default nexus-container-registry-nexus --for=pull
+$ oc describe sa default
+```
+
+[NOTE]
+====
+If the Secret was created and added after the Pod was created, the Pod must be deleted/recreated to utilize the new Secret.
+====
+
+
+## Add credentials to global cluster pull secret
+
+```
+# Create the docker auth json. For example:
+oc create secret docker-registry nexus-container-registry-nexus -n nexus \
+    --docker-server=nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com \
+    --docker-username=admin \
+    --docker-password=admin123
+MYAUTH=$(oc extract secret/nexus-container-registry-nexus -n nexus --keys .dockerconfigjson --to=- )
+echo My auth file: $MYAUTH
+
+# Get the current global pull secret 
+CURRENTPULLSECRET=$(oc extract secret/pull-secret -n openshift-config --keys .dockerconfigjson --to=- )
+echo Old pull secret: $CURRENTPULLSECRET
+
+# Merge the new auth json into the current list
+MERGEDPULLSECRET=$(echo $MYAUTH $CURRENTPULLSECRET | jq -c -s 'reduce .[] as $x ({}; . * $x)')
+echo $MERGEDPULLSECRET | jq .
+oc set data secret/pull-secret -n openshift-config --from-literal=.dockerconfigjson=$MERGEDPULLSECRET
+
+# Watch nodes being restarted - this takes 15+ miniutes as nodes are restarted one-by-one
+oc get nodes -w 
+```
+
+## Add credentials for ImageStreams
+
+ImageStreams automatically check all _kubernetes.io/dockerconfigjson_ typed secrets - in the namespace of the ImageStream - for docker credentials. Creating the Secret is enough to deploy a Pod from an ImageStream, it's not essential to link the secret to the ServiceAccount of the Pod (TODO: verify).
+
+Global cluster pull secret doesn't work in case of ImageStreams (TODO: verify).
+
+

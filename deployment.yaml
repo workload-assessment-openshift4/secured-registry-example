@@ -1,0 +1,30 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: fuse7hello
+  labels:
+    app: fuse7hello
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fuse7hello
+  template:
+    metadata:
+      labels:
+        app: fuse7hello
+    spec:
+      containers:
+        - name: fuse7hello-ui
+          image: nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/test/fuse7hello:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+            - containerPort: 9779
+              protocol: TCP
+          resources: {}
+          imagePullPolicy: Always
+  strategy:
+    type: RollingUpdate
