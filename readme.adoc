@@ -40,7 +40,7 @@ $ oc describe sa default
 If the Secret was created and added after the Pod was created, the Pod must be deleted/recreated to utilize the new Secret.
 ====
 
-See examples: link:buildconfig-binary.yaml, link:buildconfig-s2i.yaml
+See examples: link:buildconfig-binary.yaml[], link:buildconfig-s2i.yaml[]
 
 ## Use credentials for build
 
@@ -48,7 +48,7 @@ In case of a BuildConfig the credentials can be needed for both to pull from the
 
 `oc secrets link --for=mount builder my-registry-credentials`.
 
-See examples: link:deployment.yaml[deployment.yaml], link:deployment-config.yaml[]
+See examples: link:deployment.yaml[], link:deployment-config.yaml[]
 
 ## Use credentials with ImageStreams
 
