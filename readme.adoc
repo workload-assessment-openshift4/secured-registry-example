@@ -2,11 +2,11 @@
 
 ## Trust private CA in the whole cluster
 
-We need to trust the certificate from our registry. The root CA - in this case our router's CA - must be added as a ConfigMap and added in _image.config.openshift.io/cluster_ to _additionalTrustedCA_ in the _openshift-config_ namespace. It takes a few minutes for the trusted certificate to be distributed within the cluster.
+We need to trust the certificate from our private registry. The root CA must be added as a ConfigMap and added in _image.config.openshift.io/cluster_ to _additionalTrustedCA_ in the _openshift-config_ namespace. It takes a few minutes for the trusted certificate to be distributed within the cluster.
 
 https://docs.openshift.com/container-platform/4.6/openshift_images/image-configuration.html#images-configuration-cas_image-configuration
 
-```
+```sh
 ROUTERCA=$(oc extract -n openshift-ingress-operator secret/router-ca --keys=tls.crt --to=-)
 echo $ROUTERCA
 
@@ -20,11 +20,11 @@ oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedC
 # oc import-image importedfuse7hello --from='nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/test/fuse7hello:latest' --confirm
 ```
 
-## Add credentials for service account
+## Use credentials for deployment
 
-Create a Secret with the registry credentials and link it to the ServiceAccount. The secrets that are linked to the ServiceAccount of the Pod (default) for _pull_ will be automatically added to the Pod's _imagePullSecrets_ list.
+Create a Secret with the registry credentials and link it to the ServiceAccount. The secrets that are linked to the ServiceAccount of the Pod ("default") for _pull_ will be automatically added to the Pod's _imagePullSecrets_ list.
 
-```
+```sh
 $ oc create secret docker-registry nexus-container-registry-nexus \
     --docker-server=nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com \
     --docker-username=admin \
@@ -40,10 +40,27 @@ $ oc describe sa default
 If the Secret was created and added after the Pod was created, the Pod must be deleted/recreated to utilize the new Secret.
 ====
 
+See examples: link:buildconfig-binary.yaml, link:buildconfig-s2i.yaml
+
+## Use credentials for build
+
+In case of a BuildConfig the credentials can be needed for both to pull from the source and push images into the target repository. The easiest is to link the secret to the "builder" ServiceAccount in the namespace `--for=mount`:
+
+`oc secrets link --for=mount builder my-registry-credentials`.
+
+See examples: link:deployment.yaml[deployment.yaml], link:deployment-config.yaml[]
+
+## Use credentials with ImageStreams
+
+ImageStreams automatically check all _kubernetes.io/dockerconfigjson_ typed secrets - in the namespace of the ImageStream - for docker credentials. Creating the Secret is enough to deploy a Pod from an ImageStream, it's not required to link the secret to the ServiceAccount. Global pull secrets also work automtically in case of ImageStreams.
+
 
 ## Add credentials to global cluster pull secret
 
-```
+A pull secret can be set globally on the cluster by cluster admins. The global pull secrets are in a Secret called `pull-secret` in the `openshift-config` namespace.
+Use the the OpenShift UI or this code snippet:
+
+```sh
 # Create the docker auth json. For example:
 oc create secret docker-registry nexus-container-registry-nexus -n nexus \
     --docker-server=nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com \
@@ -65,10 +82,8 @@ oc set data secret/pull-secret -n openshift-config --from-literal=.dockerconfigj
 oc get nodes -w 
 ```
 
-## Add credentials for ImageStreams
+WARNING: Changing the global pull secret will restart all worker nodes one-by-one.
 
-ImageStreams automatically check all _kubernetes.io/dockerconfigjson_ typed secrets - in the namespace of the ImageStream - for docker credentials. Creating the Secret is enough to deploy a Pod from an ImageStream, it's not essential to link the secret to the ServiceAccount of the Pod (TODO: verify).
 
-Global cluster pull secret doesn't work in case of ImageStreams (TODO: verify).
 
 

@@ -26,5 +26,9 @@ spec:
               protocol: TCP
           resources: {}
           imagePullPolicy: Always
+      serviceAccountName: default
+      # imagePullSecrets is not needed if secret is linked to ServiceAccount --for=pull
+      imagePullSecrets:
+        - name: nexus-container-registry-nexus
   strategy:
     type: RollingUpdate
