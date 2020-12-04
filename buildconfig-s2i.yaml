@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: basic-servlet-example-s2i
+  labels:
+    app: basic-servlet-example
+spec:
+  output:
+    to:
+      kind: DockerImage
+      # Global pull secret doesn't work - but linking to builder does
+      name: nexus-container-registry-global-pull-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/basic-servlet-example-s2i:latest
+    # pushSecret:
+      # name: nexus-container-registry-global-pull-nexus
+
+      # name: nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/basic-servlet-example-s2i:latest
+      # pushSecret is optional if pullSecret works for pushing the image too
+    # pushSecret:
+      # name: nexus-container-registry-nexus
+
+  source:
+    git:
+      uri: https://github.com/workload-assessment-openshift4/basic-servlet-example.git
+    contextDir: ServletSample
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: DockerImage
+        # Global pull secfret works
+        # name: nexus-container-registry-global-pull-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/jboss-webserver-5/webserver54-openjdk11-tomcat9-openshift-rhel8:latest
+        
+        # A docker pull secret must be created and added to the build. Linking to SA builder '--for=mount' also works
+        name: nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/jboss-webserver-5/webserver54-openjdk11-tomcat9-openshift-rhel8:latest
+      # pullSecret:
+        # name: nexus-container-registry-nexus
