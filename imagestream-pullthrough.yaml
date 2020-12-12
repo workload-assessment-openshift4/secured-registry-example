@@ -11,6 +11,6 @@ spec:
   - name: latest
     from:
       kind: DockerImage
-      name: nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/test/fuse7hello:latest
+      name: nexus-container-registry-nexus.apps.cluster-3bcb.sandbox1869.opentlc.com/test/fuse7hello:latest
     referencePolicy:
       type: Local
