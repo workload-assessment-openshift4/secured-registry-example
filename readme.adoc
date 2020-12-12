@@ -17,7 +17,7 @@ oc get cm router-ca -n openshift-config -oyaml
 oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"router-ca"}}}' --type=merge
 
 # Needs a couple minutes
-# oc import-image importedfuse7hello --from='nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/test/fuse7hello:latest' --confirm
+# oc import-image importedfuse7hello --from='nexus-container-registry-nexus.apps.cluster-3bcb.sandbox1869.opentlc.com/test/fuse7hello:latest' --confirm
 ```
 
 ## Use credentials for deployment
@@ -26,7 +26,7 @@ Create a Secret with the registry credentials and link it to the ServiceAccount.
 
 ```sh
 $ oc create secret docker-registry nexus-container-registry-nexus \
-    --docker-server=nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com \
+    --docker-server=nexus-container-registry-nexus.apps.cluster-3bcb.sandbox1869.opentlc.com \
     --docker-username=admin \
     --docker-password=admin123
 $ oc extract secret/nexus-container-registry-nexus --keys .dockerconfigjson --to=- | jq .
@@ -63,7 +63,7 @@ Use the the OpenShift UI or this code snippet:
 ```sh
 # Create the docker auth json. For example:
 oc create secret docker-registry nexus-container-registry-nexus -n nexus \
-    --docker-server=nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com \
+    --docker-server=nexus-container-registry-nexus.apps.cluster-3bcb.sandbox1869.opentlc.com \
     --docker-username=admin \
     --docker-password=admin123
 MYAUTH=$(oc extract secret/nexus-container-registry-nexus -n nexus --keys .dockerconfigjson --to=- )

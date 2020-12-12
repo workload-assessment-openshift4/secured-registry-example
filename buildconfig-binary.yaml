@@ -8,7 +8,7 @@ spec:
   output:
     to:
       kind: DockerImage
-      name: nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/myapps/basic-servlet-example-s2i:latest
+      name: nexus-container-registry-nexus.apps.cluster-3bcb.sandbox1869.opentlc.com/myapps/basic-servlet-example-s2i:latest
     # The pushSecret is optional, pullSecret is being used for push by default.
     pushSecret:
       name: nexus-container-registry-nexus
@@ -25,7 +25,7 @@ spec:
     dockerStrategy:
       from:
         kind: DockerImage
-        name: nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/jboss-webserver-5/webserver54-openjdk11-tomcat9-openshift-rhel8:latest
+        name: nexus-container-registry-nexus.apps.cluster-3bcb.sandbox1869.opentlc.com/jboss-webserver-5/webserver54-openjdk11-tomcat9-openshift-rhel8:latest
       # A pull secret must be created and added to the build. Linking to ServiceAccount "builder" '--for=mount' also works.
       pullSecret:
         name: nexus-container-registry-nexus

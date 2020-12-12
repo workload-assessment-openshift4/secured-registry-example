@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: fuse7hello-ui
-          image: nexus-container-registry-nexus.apps.cluster-ccf2.sandbox801.opentlc.com/test/fuse7hello:latest
+          image: nexus-container-registry-nexus.apps.cluster-3bcb.sandbox1869.opentlc.com/test/fuse7hello:latest
           ports:
             - containerPort: 8080
             - containerPort: 8778
